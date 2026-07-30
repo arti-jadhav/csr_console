@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CreditOne · Service Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --ink:#0A1826; --ink-2:#10233B; --ink-3:#17314F;
+    --bg:#EEF1F5; --card:#FFFFFF; --border:#DCE2E8; --border-soft:#E7EBEF;
+    --text:#14202E; --text-2:#5B6B7D; --text-3:#8A97A6;
+    --blue:#1D5FA6; --blue-dark:#124478; --blue-tint:#E8F0FA;
+    --teal:#0F8C7C; --teal-dark:#0A6558; --teal-tint:#E4F5F2;
+    --amber:#C77D0E; --amber-tint:#FBF0DD;
+    --red:#C4392B; --red-tint:#FBEAE8;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(10,24,38,0.06), 0 4px 16px rgba(10,24,38,0.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+  #app{display:flex; min-height:100vh;}
+
+  /* Sidebar */
+  .sidebar{
+    width:236px; flex-shrink:0; background:linear-gradient(180deg,var(--ink) 0%, var(--ink-2) 100%);
+    color:#fff; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  }
+  .brand{padding:22px 20px 18px; border-bottom:1px solid rgba(255,255,255,0.08);}
+  .brand-mark{display:flex; align-items:center; gap:10px;}
+  .brand-logo{width:34px; height:34px; border-radius:8px; background:var(--blue); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; letter-spacing:-0.5px;}
+  .brand-name{font-size:15px; font-weight:600; line-height:1.2;}
+  .brand-sub{font-size:11px; color:rgba(255,255,255,0.5); margin-top:2px; letter-spacing:0.02em;}
+  .nav{flex:1; padding:14px 10px; overflow-y:auto;}
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:8px; color:rgba(255,255,255,0.68);
+    font-size:13.5px; font-weight:500; cursor:pointer; margin-bottom:2px; border:none; background:none; width:100%; text-align:left;
+  }
+  .nav-item:hover{background:rgba(255,255,255,0.06); color:#fff;}
+  .nav-item.active{background:var(--blue); color:#fff;}
+  .nav-icon{width:17px; height:17px; flex-shrink:0;}
+  .nav-badge{margin-left:auto; background:rgba(255,255,255,0.14); color:#fff; font-size:10.5px; font-weight:600; padding:1px 6px; border-radius:20px;}
+  .nav-item.active .nav-badge{background:rgba(255,255,255,0.25);}
+  .sidebar-footer{padding:14px 20px 18px; border-top:1px solid rgba(255,255,255,0.08); font-size:11px; color:rgba(255,255,255,0.42);}
+
+  /* Main */
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .topbar{
+    background:var(--card); border-bottom:1px solid var(--border); padding:14px 28px;
+    display:flex; align-items:center; gap:18px; position:sticky; top:0; z-index:5;
+  }
+  .cust-switch{display:flex; align-items:center; gap:10px; flex:1; min-width:0;}
+  .cust-switch label{font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; white-space:nowrap;}
+  select#customerSelect{
+    font-family:inherit; font-size:13.5px; font-weight:500; padding:8px 12px; border-radius:8px; border:1px solid var(--border);
+    background:#fff; color:var(--text); min-width:260px; max-width:420px;
+  }
+  .topbar-right{display:flex; align-items:center; gap:16px; margin-left:auto;}
+  .agent-chip{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);}
+  .agent-avatar{width:28px; height:28px; border-radius:50%; background:var(--blue-tint); color:var(--blue-dark); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700;}
+  .content{padding:24px 28px 48px; max-width:1180px; width:100%; margin:0 auto;}
+
+  h1.page-title{font-size:20px; font-weight:600; margin:0 0 4px;}
+  p.page-sub{font-size:13.5px; color:var(--text-2); margin:0 0 22px;}
+
+  /* Cards & grid */
+  .grid{display:grid; gap:14px;}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:repeat(2,1fr);}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow);}
+  .stat-label{font-size:11.5px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;}
+  .stat-value{font-size:24px; font-weight:600; letter-spacing:-0.3px;}
+  .stat-sub{font-size:12px; color:var(--text-2); margin-top:6px;}
+
+  /* Pills */
+  .pill{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:20px; white-space:nowrap;}
+  .pill-dot{width:6px; height:6px; border-radius:50%;}
+  .pill-active{background:var(--teal-tint); color:var(--teal-dark);} .pill-active .pill-dot{background:var(--teal);}
+  .pill-blocked{background:var(--red-tint); color:var(--red);} .pill-blocked .pill-dot{background:var(--red);}
+  .pill-restricted{background:var(--amber-tint); color:var(--amber);} .pill-restricted .pill-dot{background:var(--amber);}
+  .pill-open{background:var(--amber-tint); color:var(--amber);}
+  .pill-inprogress{background:var(--blue-tint); color:var(--blue-dark);}
+  .pill-resolved{background:var(--teal-tint); color:var(--teal-dark);}
+  .pill-rejected{background:var(--red-tint); color:var(--red);}
+  .pill-paid{background:var(--teal-tint); color:var(--teal-dark);}
+  .pill-pending{background:var(--amber-tint); color:var(--amber);}
+  .pill-overdue{background:var(--red-tint); color:var(--red);}
+
+  /* Tables */
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-3); font-weight:600; padding:9px 12px; border-bottom:1px solid var(--border);}
+  td{padding:11px 12px; border-bottom:1px solid var(--border-soft); color:var(--text);}
+  tr.row-click{cursor:pointer;}
+  tr.row-click:hover td{background:#F7F9FB;}
+  .table-wrap{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);}
+
+  /* Buttons */
+  button.btn{font-family:inherit; font-size:13px; font-weight:600; padding:9px 15px; border-radius:8px; border:1px solid var(--border); background:#fff; color:var(--text); cursor:pointer;}
+  button.btn:hover{background:#F5F7F9;}
+  button.btn-primary{background:var(--blue); color:#fff; border-color:var(--blue);}
+  button.btn-primary:hover{background:var(--blue-dark);}
+  button.btn-danger{background:#fff; color:var(--red); border-color:#EAC3BE;}
+  button.btn-danger:hover{background:var(--red-tint);}
+  button.btn-teal{background:var(--teal); color:#fff; border-color:var(--teal);}
+  button.btn-teal:hover{background:var(--teal-dark);}
+  button.btn-sm{padding:6px 11px; font-size:12px;}
+  button:disabled{opacity:0.45; cursor:not-allowed;}
+
+  input[type=text], input[type=number], select, textarea{
+    font-family:inherit; font-size:13.5px; padding:9px 11px; border-radius:8px; border:1px solid var(--border); background:#fff; color:var(--text); width:100%;
+  }
+  label.field-label{font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:6px;}
+  .field{margin-bottom:14px;}
+
+  .section-title{font-size:15px; font-weight:600; margin:28px 0 12px;}
+  .section-title:first-child{margin-top:0;}
+  .flex-between{display:flex; align-items:center; justify-content:space-between;}
+  .muted{color:var(--text-2);}
+  .toast{
+    position:fixed; bottom:24px; right:28px; background:var(--ink-2); color:#fff; padding:12px 18px; border-radius:9px;
+    font-size:13px; font-weight:500; box-shadow:0 8px 24px rgba(10,24,38,0.25); display:flex; align-items:center; gap:10px;
+    transform:translateY(20px); opacity:0; pointer-events:none; transition:all 0.25s ease; z-index:50;
+  }
+  .toast.show{transform:translateY(0); opacity:1;}
+  .toast-dot{width:8px; height:8px; border-radius:50%; background:var(--teal); flex-shrink:0;}
+
+  /* Health ring */
+  .ring-wrap{display:flex; align-items:center; gap:18px;}
+  .ring-score{font-size:26px; font-weight:700; font-family:'IBM Plex Mono',monospace;}
+  .ring-band{font-size:12px; font-weight:600; margin-top:2px;}
+
+  .filter-row{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .filter-chip{
+    font-size:12.5px; font-weight:600; padding:6px 13px; border-radius:20px; border:1px solid var(--border); background:#fff; color:var(--text-2); cursor:pointer;
+  }
+  .filter-chip.active{background:var(--ink-2); color:#fff; border-color:var(--ink-2);}
+
+  .action-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+  .modal-overlay{position:fixed; inset:0; background:rgba(10,24,38,0.45); display:flex; align-items:center; justify-content:center; z-index:60;}
+  .modal{background:#fff; border-radius:12px; padding:22px 24px; width:420px; max-width:92vw; box-shadow:0 20px 60px rgba(10,24,38,0.3);}
+  .modal h3{margin:0 0 4px; font-size:16px;}
+  .modal p.modal-sub{margin:0 0 16px; font-size:12.5px; color:var(--text-2);}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:6px;}
+
+  .profile-hero{display:flex; gap:20px; align-items:flex-start;}
+  .avatar-lg{width:56px; height:56px; border-radius:14px; background:var(--blue-tint); color:var(--blue-dark); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:19px; flex-shrink:0;}
+  .card-number{font-family:'IBM Plex Mono',monospace; letter-spacing:1px; font-size:14px; color:var(--text-2);}
+
+  @media (max-width: 880px){
+    .sidebar{width:64px;}
+    .brand-name,.brand-sub,.nav-item span.label,.nav-badge{display:none;}
+    .nav-item{justify-content:center;}
+    .grid-4{grid-template-columns:repeat(2,1fr);}
+    .grid-3{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"><span class="toast-dot"></span><span id="toastMsg"></span></div>
+
+<script>
+/* ============================= SAMPLE DATA ============================= */
+const MONTHS = ["Aug 2025","Sep 2025","Oct 2025","Nov 2025","Dec 2025","Jan 2026","Feb 2026","Mar 2026","Apr 2026","May 2026","Jun 2026","Jul 2026"];
+
+function buildScoreHistory(scores){ return scores.map((s,i)=>({month:MONTHS[i], score:s})); }
+
+let ticketSeq = 1046;
+function nextTicketId(){ ticketSeq++; return "TCK-"+ticketSeq; }
+let logSeq = 500;
+function nextLogId(){ logSeq++; return "LOG-"+logSeq; }
+
+const AGENTS = [
+  {id:"A-01792", name:"Sana Kapoor", role:"CSR Tier 2", initials:"SK"},
+  {id:"A-01844", name:"Arjun Verma", role:"CSR Tier 1", initials:"AV"},
+  {id:"A-01905", name:"Meera Iyer", role:"Senior CSR", initials:"MI"}
+];
+
+const TODAY = new Date(2026,6,30); // 30 Jul 2026 — fixed demo "current" date
+const MONTH_MAP = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function parseDate(str){
+  const parts = str.split(" ");
+  if(parts.length<3) return TODAY;
+  return new Date(parseInt(parts[2],10), MONTH_MAP[parts[1]], parseInt(parts[0],10));
+}
+function daysAgo(str){ return Math.round((TODAY - parseDate(str)) / (1000*60*60*24)); }
+
+const STORAGE_KEY = "creditone_console_state_v1";
+const hasStorage = typeof window.storage !== "undefined";
+async function persistState(){
+  if(!hasStorage) return;
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify({
+      customers: state.customers, auditLog: state.auditLog, ticketSeq, logSeq
+    }), false);
+  }catch(e){ console.warn("Storage save skipped:", e); }
+}
+async function hydrateState(){
+  if(!hasStorage) return;
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const data = JSON.parse(res.value);
+      if(data.customers) state.customers = data.customers;
+      if(data.auditLog) state.auditLog = data.auditLog;
+      if(data.ticketSeq) ticketSeq = data.ticketSeq;
+      if(data.logSeq) logSeq = data.logSeq;
+    }
+  }catch(e){ /* no saved state yet — fine, keep sample data */ }
+}
+async function resetSampleData(){
+  if(hasStorage){ try{ await window.storage.delete(STORAGE_KEY, false); }catch(e){} }
+  location.reload();
+}
+
+function addAudit(action, customer, details){
+  state.auditLog.unshift({
+    id: nextLogId(),
+    timestamp: new Date().toLocaleString("en-IN",{day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit"}),
+    agent: state.currentAgent ? state.currentAgent.name : "System",
+    customerId: customer ? customer.id : null,
+    customerName: customer ? customer.name : "—",
+    action, details
+  });
+  persistState();
+}
+
+const state = {
+  loggedIn: false,
+  currentAgent: null,
+  activeTab: "dashboard",
+  selectedId: "C-1001",
+  customerFilter: "",
+  disputeFilter: "All",
+  rewardsRange: "30",
+  auditAgentFilter: "All",
+  auditActionFilter: "All",
+  auditLog: [],
+  customers: [
+    {
+      id:"C-1001", name:"Ananya Sharma", email:"ananya.sharma@example.com", phone:"+91 98200 11234",
+      joinDate:"14 Nov 2022", tier:"Platinum", cardType:"CreditOne Platinum Rewards", cardNumber:"4321 •••• •••• 7745",
+      status:"Active", creditLimit:500000, currentBalance:82340, availableCredit:417660,
+      statementDate:"20 Jul 2026", dueDate:"15 Aug 2026", minDue:4200, totalDue:82340,
+      scoreHistory: buildScoreHistory([620,630,638,645,655,662,670,678,688,696,702,710]),
+      scoreFactors:[
+        {label:"Payment history", detail:"On-time, 12 of 12 months", pct:96},
+        {label:"Credit utilization", detail:"16% of limit used", pct:84},
+        {label:"Credit age", detail:"3 yrs 8 mths", pct:62},
+        {label:"Recent inquiries", detail:"1 in last 6 months", pct:88}
+      ],
+      cashback:{available:3450, earnedYTD:8900, redeemedYTD:5450, rate:"1.5% base · 5% dining",
+        transactions:[
+          {date:"22 Jul 2026", merchant:"Cafe Coffee Day", category:"Dining", spend:1450, cashback:73, type:"Earned"},
+          {date:"18 Jul 2026", merchant:"BigBasket", category:"Groceries", spend:3200, cashback:48, type:"Earned"},
+          {date:"09 Jul 2026", merchant:"Statement Credit", category:"Redemption", spend:0, cashback:-2000, type:"Redeemed"},
+          {date:"02 Jul 2026", merchant:"IndiGo Airlines", category:"Travel", spend:12500, cashback:188, type:"Earned"},
+          {date:"26 Jun 2026", merchant:"Amazon.in", category:"Online Shopping", spend:5600, cashback:84, type:"Earned"},
+          {date:"14 Jun 2026", merchant:"HPCL Fuel Station", category:"Fuel", spend:2100, cashback:32, type:"Earned"},
+          {date:"03 Jun 2026", merchant:"Voucher Redemption", category:"Redemption", spend:0, cashback:-3450, type:"Redeemed"}
+        ]},
+      tickets:[
+        {id:"TCK-1012", type:"Limit Increase", subject:"Requested limit enhancement", description:"Customer requested increase from 4L to 5L citing higher monthly spend.", status:"Resolved", created:"02 Jun 2026", updated:"08 Jun 2026"},
+        {id:"TCK-1034", type:"Billing Query", subject:"Query on annual fee reversal", description:"Customer disputes annual fee charge, cites first-year waiver offer.", status:"Open", created:"21 Jul 2026", updated:"21 Jul 2026"}
+      ],
+      statements:[
+        {month:"Jun 2026", totalDue:76200, minDue:3900, paidAmount:76200, paidDate:"10 Jul 2026", status:"Paid"},
+        {month:"May 2026", totalDue:68900, minDue:3500, paidAmount:68900, paidDate:"09 Jun 2026", status:"Paid"},
+        {month:"Apr 2026", totalDue:59100, minDue:3000, paidAmount:59100, paidDate:"08 May 2026", status:"Paid"},
+        {month:"Mar 2026", totalDue:71300, minDue:3600, paidAmount:71300, paidDate:"09 Apr 2026", status:"Paid"}
+      ]
+    },
+    {
+      id:"C-1002", name:"Rohan Mehta", email:"rohan.mehta@example.com", phone:"+91 99870 55621",
+      joinDate:"02 Mar 2021", tier:"Gold", cardType:"CreditOne Titanium", cardNumber:"5412 •••• •••• 3390",
+      status:"Blocked", creditLimit:200000, currentBalance:15600, availableCredit:184400,
+      statementDate:"25 Jul 2026", dueDate:"18 Aug 2026", minDue:1600, totalDue:15600,
+      scoreHistory: buildScoreHistory([735,730,725,715,705,700,695,705,700,695,692,690]),
+      scoreFactors:[
+        {label:"Payment history", detail:"1 missed payment (Nov 2025)", pct:58},
+        {label:"Credit utilization", detail:"8% of limit used", pct:92},
+        {label:"Credit age", detail:"5 yrs 4 mths", pct:80},
+        {label:"Recent inquiries", detail:"0 in last 6 months", pct:95}
+      ],
+      cashback:{available:1200, earnedYTD:3100, redeemedYTD:1900, rate:"1% base · 3% fuel",
+        transactions:[
+          {date:"20 Jul 2026", merchant:"Shell Fuel Station", category:"Fuel", spend:1800, cashback:54, type:"Earned"},
+          {date:"11 Jul 2026", merchant:"Swiggy", category:"Dining", spend:890, cashback:9, type:"Earned"},
+          {date:"29 Jun 2026", merchant:"Statement Credit", category:"Redemption", spend:0, cashback:-1900, type:"Redeemed"},
+          {date:"15 Jun 2026", merchant:"Reliance Digital", category:"Electronics", spend:9400, cashback:94, type:"Earned"}
+        ]},
+      tickets:[
+        {id:"TCK-1041", type:"Card Replacement", subject:"Card reported lost", description:"Customer reported card lost while traveling; card blocked as precaution, replacement requested.", status:"Open", created:"27 Jul 2026", updated:"27 Jul 2026"},
+        {id:"TCK-1029", type:"Dispute", subject:"Unauthorized transaction ₹250", description:"Customer disputes a ₹250 charge from an unrecognized merchant on 14 Jul statement.", status:"In Progress", created:"18 Jul 2026", updated:"24 Jul 2026"}
+      ],
+      statements:[
+        {month:"Jun 2026", totalDue:22400, minDue:2200, paidAmount:22400, paidDate:"12 Jul 2026", status:"Paid"},
+        {month:"May 2026", totalDue:18700, minDue:1900, paidAmount:9000, paidDate:"14 Jun 2026", status:"Paid"},
+        {month:"Apr 2026", totalDue:26100, minDue:2600, paidAmount:0, paidDate:"—", status:"Overdue"},
+        {month:"Mar 2026", totalDue:14200, minDue:1400, paidAmount:14200, paidDate:"07 Apr 2026", status:"Paid"}
+      ]
+    },
+    {
+      id:"C-1003", name:"Priya Nair", email:"priya.nair@example.com", phone:"+91 90080 43217",
+      joinDate:"19 Jul 2019", tier:"Platinum", cardType:"CreditOne Signature", cardNumber:"4916 •••• •••• 1182",
+      status:"Restricted", creditLimit:800000, currentBalance:612000, availableCredit:188000,
+      statementDate:"12 Jul 2026", dueDate:"05 Aug 2026", minDue:30600, totalDue:612000,
+      scoreHistory: buildScoreHistory([705,700,695,690,680,672,665,658,652,648,644,640]),
+      scoreFactors:[
+        {label:"Payment history", detail:"On-time, but min-due only", pct:70},
+        {label:"Credit utilization", detail:"76% of limit used — high", pct:24},
+        {label:"Credit age", detail:"6 yrs 11 mths", pct:88},
+        {label:"Recent inquiries", detail:"3 in last 6 months", pct:45}
+      ],
+      cashback:{available:0, earnedYTD:12500, redeemedYTD:12500, rate:"1.5% base · 4% travel",
+        transactions:[
+          {date:"08 Jul 2026", merchant:"Statement Credit", category:"Redemption", spend:0, cashback:-4200, type:"Redeemed"},
+          {date:"29 Jun 2026", merchant:"Taj Hotels", category:"Travel", spend:22000, cashback:880, type:"Earned"},
+          {date:"14 Jun 2026", merchant:"Statement Credit", category:"Redemption", spend:0, cashback:-8300, type:"Redeemed"},
+          {date:"02 Jun 2026", merchant:"Zara", category:"Online Shopping", spend:8600, cashback:129, type:"Earned"}
+        ]},
+      tickets:[
+        {id:"TCK-1038", type:"Dispute", subject:"Disputed merchant charge ₹18,400", description:"Customer disputes a duplicate charge from a hotel booking platform, requests investigation.", status:"Open", created:"22 Jul 2026", updated:"22 Jul 2026"},
+        {id:"TCK-1019", type:"Limit Increase", subject:"Requested limit enhancement to 10L", description:"Request declined by risk team due to high existing utilization and declining score trend.", status:"Rejected", created:"30 May 2026", updated:"06 Jun 2026"}
+      ],
+      statements:[
+        {month:"Jun 2026", totalDue:588000, minDue:29400, paidAmount:29400, paidDate:"10 Jul 2026", status:"Paid"},
+        {month:"May 2026", totalDue:551000, minDue:27550, paidAmount:27550, paidDate:"09 Jun 2026", status:"Paid"},
+        {month:"Apr 2026", totalDue:602000, minDue:30100, paidAmount:30100, paidDate:"08 May 2026", status:"Paid"},
+        {month:"Mar 2026", totalDue:540000, minDue:27000, paidAmount:27000, paidDate:"07 Apr 2026", status:"Paid"}
+      ]
+    },
+    {
+      id:"C-1004", name:"Vikram Iyer", email:"vikram.iyer@example.com", phone:"+91 98450 76621",
+      joinDate:"08 Jan 2018", tier:"Silver", cardType:"CreditOne Classic", cardNumber:"4009 •••• •••• 6650",
+      status:"Active", creditLimit:100000, currentBalance:4200, availableCredit:95800,
+      statementDate:"05 Jul 2026", dueDate:"29 Jul 2026", minDue:500, totalDue:4200,
+      scoreHistory: buildScoreHistory([772,775,778,780,779,782,784,783,785,784,786,785]),
+      scoreFactors:[
+        {label:"Payment history", detail:"On-time, 12 of 12 months", pct:99},
+        {label:"Credit utilization", detail:"4% of limit used", pct:97},
+        {label:"Credit age", detail:"8 yrs 6 mths", pct:94},
+        {label:"Recent inquiries", detail:"0 in last 6 months", pct:98}
+      ],
+      cashback:{available:890, earnedYTD:2100, redeemedYTD:1210, rate:"1% base · 2% groceries",
+        transactions:[
+          {date:"25 Jun 2026", merchant:"D-Mart", category:"Groceries", spend:2600, cashback:52, type:"Earned"},
+          {date:"12 Jun 2026", merchant:"Statement Credit", category:"Redemption", spend:0, cashback:-1210, type:"Redeemed"},
+          {date:"30 May 2026", merchant:"BSES Electricity", category:"Utilities", spend:1800, cashback:18, type:"Earned"}
+        ]},
+      tickets:[
+        {id:"TCK-0987", type:"KYC Update", subject:"Updated registered address", description:"Address updated to new residence in Bengaluru after document verification.", status:"Resolved", created:"14 Apr 2026", updated:"16 Apr 2026"}
+      ],
+      statements:[
+        {month:"Jun 2026", totalDue:3900, minDue:400, paidAmount:3900, paidDate:"28 Jun 2026", status:"Paid"},
+        {month:"May 2026", totalDue:5100, minDue:510, paidAmount:5100, paidDate:"27 May 2026", status:"Paid"},
+        {month:"Apr 2026", totalDue:3300, minDue:330, paidAmount:3300, paidDate:"26 Apr 2026", status:"Paid"}
+      ]
+    },
+    {
+      id:"C-1005", name:"Fatima Khan", email:"fatima.khan@example.com", phone:"+91 97170 22894",
+      joinDate:"11 Mar 2026", tier:"Silver", cardType:"CreditOne Gold", cardNumber:"4556 •••• •••• 2076",
+      status:"Active", creditLimit:150000, currentBalance:32000, availableCredit:118000,
+      statementDate:"18 Jul 2026", dueDate:"11 Aug 2026", minDue:1600, totalDue:32000,
+      scoreHistory: buildScoreHistory([605,610,615,620,625,630,635,640,645,648,652,655]),
+      scoreFactors:[
+        {label:"Payment history", detail:"On-time, 4 of 4 months", pct:90},
+        {label:"Credit utilization", detail:"21% of limit used", pct:76},
+        {label:"Credit age", detail:"4 months — building", pct:22},
+        {label:"Recent inquiries", detail:"2 in last 6 months", pct:60}
+      ],
+      cashback:{available:540, earnedYTD:980, redeemedYTD:440, rate:"1% base · 3% online shopping",
+        transactions:[
+          {date:"19 Jul 2026", merchant:"Myntra", category:"Online Shopping", spend:3400, cashback:102, type:"Earned"},
+          {date:"05 Jul 2026", merchant:"Statement Credit", category:"Redemption", spend:0, cashback:-440, type:"Redeemed"},
+          {date:"22 Jun 2026", merchant:"Zomato", category:"Dining", spend:760, cashback:8, type:"Earned"}
+        ]},
+      tickets:[
+        {id:"TCK-1044", type:"Limit Increase", subject:"Requested limit review after 4 months", description:"New-to-credit customer requesting limit review citing consistent on-time payments.", status:"Open", created:"25 Jul 2026", updated:"25 Jul 2026"}
+      ],
+      statements:[
+        {month:"Jun 2026", totalDue:27800, minDue:1400, paidAmount:27800, paidDate:"09 Jul 2026", status:"Paid"},
+        {month:"May 2026", totalDue:19200, minDue:960, paidAmount:19200, paidDate:"08 Jun 2026", status:"Paid"}
+      ]
+    }
+  ]
+};
+
+/* ============================= HELPERS ============================= */
+const inr = n => "₹" + Math.round(n).toLocaleString("en-IN");
+const getCustomer = id => state.customers.find(c=>c.id===id);
+const selected = () => getCustomer(state.selectedId);
+
+function statusPillClass(s){
+  return {Active:"pill-active", Blocked:"pill-blocked", Restricted:"pill-restricted"}[s] || "pill-active";
+}
+function ticketPillClass(s){
+  return {Open:"pill-open","In Progress":"pill-inprogress", Resolved:"pill-resolved", Rejected:"pill-rejected"}[s] || "pill-open";
+}
+function statementPillClass(s){
+  return {Paid:"pill-paid", Pending:"pill-pending", Overdue:"pill-overdue"}[s] || "pill-pending";
+}
+function scoreBand(score){
+  if(score>=750) return {label:"Excellent", color:"var(--teal)"};
+  if(score>=700) return {label:"Good", color:"var(--blue)"};
+  if(score>=650) return {label:"Fair", color:"var(--amber)"};
+  return {label:"Needs attention", color:"var(--red)"};
+}
+function showToast(msg){
+  const t=document.getElementById("toast");
+  document.getElementById("toastMsg").textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove("show"), 2600);
+}
+function icon(name){
+  const icons = {
+    dashboard:'<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>',
+    profile:'<path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-4 0-9 2-9 5v3h18v-3c0-3-5-5-9-5z"/>',
+    card:'<path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 10h16v2H4v-2z"/>',
+    dispute:'<path d="M12 2 1 21h22L12 2zm0 5 6.5 12h-13L12 7zm-1 4v3h2v-3h-2zm0 4v2h2v-2h-2z"/>',
+    score:'<path d="M3 17l5-5 4 4 8-8 1.5 1.5L12 18l-4-4-5 5z"/>',
+    cashback:'<path d="M12 1c-1.5 0-2.7 1.1-2.9 2.5C7.4 4 6 5.5 6 7.3c0 2.1 1.8 3.4 3.9 4C7.5 12 5 13.5 5 16c0 2.4 2 4.2 4.7 4.7.4 1.1 1.4 1.9 2.7 1.9s2.3-.8 2.7-1.9C17.9 20.2 19 18.4 19 16c0-2.5-2.5-4-4.9-4.7 2.1-.6 3.9-1.9 3.9-4 0-1.8-1.4-3.3-3.1-3.8C14.7 2.1 13.5 1 12 1z"/>',
+    billing:'<path d="M4 3h16v18l-3-2-2 2-2-2-2 2-2-2-2 2-3-2V3zm3 5h10V6H7v2zm0 4h10v-2H7v2zm0 4h6v-2H7v2z"/>',
+    audit:'<path d="M9 2v2H4v18h16V4h-5V2H9zm1 4h4V4h-4v2zM7 10h10v2H7v-2zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/>'
+  };
+  return `<svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">${icons[name]||""}</svg>`;
+}
+
+/* ============================= RENDER: SHELL ============================= */
+function render(){
+  if(!state.loggedIn){ renderLogin(); return; }
+  const c = selected();
+  const openTicketCount = state.customers.reduce((a,cu)=>a+cu.tickets.filter(t=>t.status==="Open"||t.status==="In Progress").length,0);
+  document.getElementById("app").innerHTML = `
+    <div class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+          <div class="brand-logo">C1</div>
+          <div>
+            <div class="brand-name">CreditOne</div>
+            <div class="brand-sub">Service Console</div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        ${navItem("dashboard","dashboard","Dashboard")}
+        ${navItem("profile","profile","Account profile")}
+        ${navItem("card","card","Card services")}
+        ${navItem("disputes","dispute","Disputes & requests", openTicketCount)}
+        ${navItem("score","score","Credit score tracker")}
+        ${navItem("cashback","cashback","Cashback & rewards")}
+        ${navItem("billing","billing","Billing & statements")}
+        ${navItem("audit","audit","Audit log")}
+      </div>
+      <div class="sidebar-footer">Agent console v1.0<br/>${hasStorage?"Synced to your session":"Local session only"}</div>
+    </div>
+    <div class="main">
+      <div class="topbar">
+        <div class="cust-switch">
+          <label>Customer</label>
+          <select id="customerSelect" onchange="onSelectCustomer(this.value)">
+            ${state.customers.map(cu=>`<option value="${cu.id}" ${cu.id===state.selectedId?"selected":""}>${cu.name} — ${cu.id}</option>`).join("")}
+          </select>
+        </div>
+        <div class="topbar-right">
+          <div class="agent-chip"><div class="agent-avatar">${state.currentAgent.initials}</div><span>${state.currentAgent.name} · ${state.currentAgent.role}</span></div>
+          <button class="btn btn-sm" onclick="logout()">Switch agent</button>
+        </div>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+  `;
+  renderContent();
+}
+
+function renderLogin(){
+  document.getElementById("app").innerHTML = `
+    <div style="width:100%; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg);">
+      <div style="width:420px; max-width:92vw;">
+        <div style="text-align:center; margin-bottom:26px;">
+          <div class="brand-logo" style="margin:0 auto 14px; background:var(--blue); width:44px; height:44px; font-size:17px;">C1</div>
+          <div style="font-size:19px; font-weight:600;">CreditOne Service Console</div>
+          <div class="muted" style="font-size:13px; margin-top:4px;">Sign in with your agent profile to continue.</div>
+        </div>
+        <div class="card" style="padding:10px;">
+          ${AGENTS.map(a=>`
+            <button onclick="loginAs('${a.id}')" style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px; border:none; background:none; border-radius:8px; cursor:pointer; text-align:left;" onmouseover="this.style.background='#F5F7F9'" onmouseout="this.style.background='none'">
+              <div class="agent-avatar" style="width:36px; height:36px; font-size:13px;">${a.initials}</div>
+              <div style="flex:1;">
+                <div style="font-size:13.5px; font-weight:600;">${a.name}</div>
+                <div class="muted" style="font-size:12px;">${a.role} · ${a.id}</div>
+              </div>
+              <span class="muted" style="font-size:12px;">Sign in →</span>
+            </button>
+          `).join(`<div style="border-top:1px solid var(--border-soft);"></div>`)}
+        </div>
+        <div style="text-align:center; margin-top:16px;">
+          <button class="btn btn-sm" onclick="resetSampleData()">Reset sample data</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function loginAs(agentId){
+  state.currentAgent = AGENTS.find(a=>a.id===agentId);
+  state.loggedIn = true;
+  addAudit("Agent sign-in", null, `${state.currentAgent.name} signed in to the console`);
+  render();
+}
+function logout(){
+  addAudit("Agent sign-out", null, `${state.currentAgent.name} signed out`);
+  state.loggedIn = false;
+  state.currentAgent = null;
+  render();
+}
+
+function navItem(tab, iconName, label, badge){
+  const active = state.activeTab===tab ? "active":"";
+  return `<button class="nav-item ${active}" onclick="setTab('${tab}')">${icon(iconName)}<span class="label">${label}</span>${badge?`<span class="nav-badge">${badge}</span>`:""}</button>`;
+}
+
+function setTab(tab){ state.activeTab = tab; renderContent(); syncNav(); }
+function syncNav(){
+  document.querySelectorAll(".nav-item").forEach(el=>el.classList.remove("active"));
+  render(); // simplest: full re-render to keep nav + content in sync
+}
+function onSelectCustomer(id){ state.selectedId = id; renderContent(); }
+
+function renderContent(){
+  const el = document.getElementById("content");
+  if(!el) return;
+  const map = { dashboard:renderDashboard, profile:renderProfile, card:renderCardServices, disputes:renderDisputes, score:renderScore, cashback:renderCashback, billing:renderBilling, audit:renderAuditLog };
+  el.innerHTML = map[state.activeTab]();
+  if(state.activeTab==="score") drawScoreChart();
+}
+
+/* ============================= DASHBOARD ============================= */
+function renderDashboard(){
+  const totalCustomers = state.customers.length;
+  const openTickets = state.customers.reduce((a,c)=>a+c.tickets.filter(t=>t.status==="Open"||t.status==="In Progress").length,0);
+  const avgScore = Math.round(state.customers.reduce((a,c)=>a+c.scoreHistory[c.scoreHistory.length-1].score,0)/totalCustomers);
+  const totalCashbackOutstanding = state.customers.reduce((a,c)=>a+c.cashback.available,0);
+  const filtered = state.customers.filter(c => (c.name+c.id+c.cardType).toLowerCase().includes(state.customerFilter.toLowerCase()));
+
+  return `
+    <h1 class="page-title">Portfolio overview</h1>
+    <p class="page-sub">Snapshot across all accounts assigned to your queue.</p>
+    <div class="grid grid-4" style="margin-bottom:26px;">
+      <div class="card"><div class="stat-label">Active accounts</div><div class="stat-value">${totalCustomers}</div><div class="stat-sub">In your service queue</div></div>
+      <div class="card"><div class="stat-label">Open tickets</div><div class="stat-value">${openTickets}</div><div class="stat-sub">Awaiting resolution</div></div>
+      <div class="card"><div class="stat-label">Avg. credit score</div><div class="stat-value mono">${avgScore}</div><div class="stat-sub">${scoreBand(avgScore).label}</div></div>
+      <div class="card"><div class="stat-label">Cashback outstanding</div><div class="stat-value">${inr(totalCashbackOutstanding)}</div><div class="stat-sub">Across all accounts</div></div>
+    </div>
+
+    <div class="flex-between" style="margin-bottom:12px;">
+      <h2 class="section-title" style="margin:0;">Accounts</h2>
+      <input type="text" placeholder="Search by name, ID, or card type" style="width:280px;" value="${state.customerFilter}" oninput="filterCustomers(this.value)"/>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Customer</th><th>Card</th><th>Status</th><th>Balance</th><th>Credit score</th><th>Open tickets</th></tr></thead>
+        <tbody>
+          ${filtered.map(c=>{
+            const latestScore = c.scoreHistory[c.scoreHistory.length-1].score;
+            const openT = c.tickets.filter(t=>t.status==="Open"||t.status==="In Progress").length;
+            return `<tr class="row-click" onclick="goToProfile('${c.id}')">
+              <td><strong>${c.name}</strong><br/><span class="muted" style="font-size:12px;">${c.id}</span></td>
+              <td>${c.cardType}</td>
+              <td><span class="pill ${statusPillClass(c.status)}"><span class="pill-dot"></span>${c.status}</span></td>
+              <td class="mono">${inr(c.currentBalance)}</td>
+              <td class="mono" style="color:${scoreBand(latestScore).color}; font-weight:600;">${latestScore}</td>
+              <td>${openT>0?`<span class="pill pill-open">${openT} open</span>`:`<span class="muted">—</span>`}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function filterCustomers(v){ state.customerFilter=v; renderContent(); }
+function goToProfile(id){ state.selectedId=id; state.activeTab="profile"; render(); }
+
+/* ============================= PROFILE ============================= */
+function renderProfile(){
+  const c = selected();
+  const latest = c.scoreHistory[c.scoreHistory.length-1].score;
+  const band = scoreBand(latest);
+  const initials = c.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+  return `
+    <h1 class="page-title">Account profile</h1>
+    <p class="page-sub">Customer identity, card and standing snapshot.</p>
+
+    <div class="card profile-hero" style="margin-bottom:18px;">
+      <div class="avatar-lg">${initials}</div>
+      <div style="flex:1;">
+        <div class="flex-between">
+          <div>
+            <div style="font-size:17px; font-weight:600;">${c.name}</div>
+            <div class="card-number">${c.cardNumber}</div>
+          </div>
+          <span class="pill ${statusPillClass(c.status)}"><span class="pill-dot"></span>${c.status}</span>
+        </div>
+        <div class="grid grid-4" style="margin-top:16px;">
+          <div><div class="stat-label">Card type</div><div style="font-size:13.5px; font-weight:500;">${c.cardType}</div></div>
+          <div><div class="stat-label">Tier</div><div style="font-size:13.5px; font-weight:500;">${c.tier}</div></div>
+          <div><div class="stat-label">Customer since</div><div style="font-size:13.5px; font-weight:500;">${c.joinDate}</div></div>
+          <div><div class="stat-label">Customer ID</div><div style="font-size:13.5px; font-weight:500;" class="mono">${c.id}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom:18px;">
+      <div class="card">
+        <div class="stat-label">Credit limit</div>
+        <div class="stat-value">${inr(c.creditLimit)}</div>
+        <div class="stat-sub">Available: ${inr(c.availableCredit)}</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Current balance</div>
+        <div class="stat-value">${inr(c.currentBalance)}</div>
+        <div class="stat-sub">Due ${c.dueDate}</div>
+      </div>
+      <div class="card">
+        <div class="ring-wrap">
+          ${ringSvg(latest, band.color)}
+          <div>
+            <div class="stat-label">Credit score</div>
+            <div class="ring-score" style="color:${band.color};">${latest}</div>
+            <div class="ring-band" style="color:${band.color};">${band.label}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:10px;">Contact details</div>
+        <table>
+          <tr><td class="muted" style="border:none; padding-left:0;">Email</td><td style="border:none; text-align:right; padding-right:0;">${c.email}</td></tr>
+          <tr><td class="muted" style="border:none; padding-left:0;">Phone</td><td style="border:none; text-align:right; padding-right:0;">${c.phone}</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:10px;">Quick actions</div>
+        <div class="action-row">
+          <button class="btn ${c.status==='Blocked'?'btn-teal':'btn-danger'}" onclick="toggleBlock('${c.id}')">${c.status==='Blocked'?'Unblock card':'Block card'}</button>
+          <button class="btn" onclick="openModal('replace')">Request replacement</button>
+          <button class="btn" onclick="openModal('limit')">Request limit increase</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function ringSvg(score, color){
+  const pct = Math.min(100, Math.max(0, ((score-300)/(900-300))*100));
+  const r=26, c=2*Math.PI*r, offset = c - (pct/100)*c;
+  return `<svg width="64" height="64" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/>
+    <circle cx="32" cy="32" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${offset}" transform="rotate(-90 32 32)"/>
+  </svg>`;
+}
+
+/* ============================= CARD SERVICES ============================= */
+function renderCardServices(){
+  const c = selected();
+  return `
+    <h1 class="page-title">Card services</h1>
+    <p class="page-sub">Manage card status, replacement and limit requests for ${c.name}.</p>
+
+    <div class="card" style="margin-bottom:18px;">
+      <div class="flex-between">
+        <div>
+          <div class="stat-label">Card on file</div>
+          <div class="card-number" style="font-size:16px; margin-top:4px;">${c.cardNumber}</div>
+          <div class="muted" style="font-size:12.5px; margin-top:4px;">${c.cardType} · Limit ${inr(c.creditLimit)}</div>
+        </div>
+        <span class="pill ${statusPillClass(c.status)}"><span class="pill-dot"></span>${c.status}</span>
+      </div>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:8px;">Card status</div>
+        <p class="muted" style="font-size:13px; margin:0 0 14px;">Block immediately if a card is reported lost, stolen, or shows suspicious activity.</p>
+        <button class="btn ${c.status==='Blocked'?'btn-teal':'btn-danger'}" style="width:100%;" onclick="toggleBlock('${c.id}')">${c.status==='Blocked'?'Unblock card':'Block card'}</button>
+      </div>
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:8px;">Replacement</div>
+        <p class="muted" style="font-size:13px; margin:0 0 14px;">Issue a new physical card for a damaged, lost, or expiring card.</p>
+        <button class="btn btn-primary" style="width:100%;" onclick="openModal('replace')">Request replacement</button>
+      </div>
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:8px;">Limit increase</div>
+        <p class="muted" style="font-size:13px; margin:0 0 14px;">Submit a limit review request for underwriting approval.</p>
+        <button class="btn btn-primary" style="width:100%;" onclick="openModal('limit')">Request limit increase</button>
+      </div>
+    </div>
+
+    <h2 class="section-title">Recent card-related requests</h2>
+    ${ticketTable(c.tickets.filter(t=>["Card Replacement","Limit Increase"].includes(t.type)))}
+  `;
+}
+
+function toggleBlock(id){
+  const c = getCustomer(id);
+  const wasBlocked = c.status==="Blocked";
+  c.status = wasBlocked ? "Active" : "Blocked";
+  c.tickets.unshift({
+    id: nextTicketId(), type:"Card Status", subject: wasBlocked?"Card unblocked by agent":"Card blocked by agent",
+    description: wasBlocked?"Card reinstated after verification with cardholder.":"Card blocked as a precaution per cardholder request or risk flag.",
+    status:"Resolved", created: today(), updated: today()
+  });
+  addAudit(wasBlocked?"Card unblocked":"Card blocked", c, wasBlocked?"Card reinstated after verification with cardholder.":"Card blocked as a precaution per cardholder request or risk flag.");
+  showToast(wasBlocked ? "Card unblocked" : "Card blocked");
+  render();
+}
+function today(){ return "30 Jul 2026"; }
+
+/* ============================= DISPUTES & REQUESTS ============================= */
+function renderDisputes(){
+  const c = selected();
+  const filters = ["All","Open","In Progress","Resolved","Rejected"];
+  const list = state.disputeFilter==="All" ? c.tickets : c.tickets.filter(t=>t.status===state.disputeFilter);
+  return `
+    <h1 class="page-title">Disputes & requests</h1>
+    <p class="page-sub">All service tickets logged for ${c.name}.</p>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="stat-label" style="margin-bottom:10px;">Raise a new ticket</div>
+      <div class="grid grid-2">
+        <div class="field">
+          <label class="field-label">Ticket type</label>
+          <select id="newTicketType">
+            <option>Transaction Dispute</option>
+            <option>Billing Query</option>
+            <option>Card Replacement</option>
+            <option>Limit Increase</option>
+            <option>KYC Update</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Subject</label>
+          <input type="text" id="newTicketSubject" placeholder="Short summary of the request"/>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Description</label>
+        <textarea id="newTicketDesc" rows="2" placeholder="Details shared by the cardholder"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="raiseTicket('${c.id}')">Submit ticket</button>
+    </div>
+
+    <div class="filter-row">
+      ${filters.map(f=>`<button class="filter-chip ${state.disputeFilter===f?'active':''}" onclick="setDisputeFilter('${f}')">${f}</button>`).join("")}
+    </div>
+    ${ticketTable(list, true)}
+  `;
+}
+function setDisputeFilter(f){ state.disputeFilter=f; renderContent(); }
+
+function ticketTable(tickets, showActions){
+  if(tickets.length===0) return `<div class="table-wrap" style="padding:24px; text-align:center;" class="muted">No tickets in this view.</div>`;
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Ticket</th><th>Type</th><th>Subject</th><th>Status</th><th>Updated</th>${showActions?"<th></th>":""}</tr></thead>
+    <tbody>
+      ${tickets.map(t=>`<tr>
+        <td class="mono">${t.id}</td>
+        <td>${t.type}</td>
+        <td>${t.subject}<br/><span class="muted" style="font-size:12px;">${t.description}</span></td>
+        <td><span class="pill ${ticketPillClass(t.status)}"><span class="pill-dot"></span>${t.status}</span></td>
+        <td class="muted" style="font-size:12.5px;">${t.updated}</td>
+        ${showActions?`<td>${ticketActionButtons(t)}</td>`:""}
+      </tr>`).join("")}
+    </tbody>
+  </table></div>`;
+}
+function ticketActionButtons(t){
+  if(t.status==="Open") return `<button class="btn btn-sm" onclick="advanceTicket('${t.id}','In Progress')">Start progress</button>`;
+  if(t.status==="In Progress") return `<button class="btn btn-sm btn-teal" onclick="advanceTicket('${t.id}','Resolved')">Mark resolved</button>`;
+  return "";
+}
+function advanceTicket(ticketId, newStatus){
+  const c = selected();
+  const t = c.tickets.find(x=>x.id===ticketId);
+  t.status = newStatus; t.updated = today();
+  addAudit("Ticket status updated", c, `${ticketId} (${t.type}) moved to ${newStatus}`);
+  showToast(`Ticket ${ticketId} moved to ${newStatus}`);
+  renderContent();
+}
+function raiseTicket(customerId){
+  const type = document.getElementById("newTicketType").value;
+  const subject = document.getElementById("newTicketSubject").value.trim();
+  const desc = document.getElementById("newTicketDesc").value.trim();
+  if(!subject){ showToast("Enter a subject before submitting"); return; }
+  const c = getCustomer(customerId);
+  c.tickets.unshift({id: nextTicketId(), type, subject, description: desc || "No additional details provided.", status:"Open", created: today(), updated: today()});
+  addAudit("Ticket raised", c, `${type}: ${subject}`);
+  showToast("Ticket submitted");
+  renderContent();
+}
+
+/* ============================= CREDIT SCORE TRACKER ============================= */
+function renderScore(){
+  const c = selected();
+  const latest = c.scoreHistory[c.scoreHistory.length-1].score;
+  const first = c.scoreHistory[0].score;
+  const delta = latest-first;
+  const band = scoreBand(latest);
+  return `
+    <h1 class="page-title">Credit score tracker</h1>
+    <p class="page-sub">Monthly score movement for ${c.name}, over the last 12 months.</p>
+
+    <div class="grid grid-3" style="margin-bottom:18px;">
+      <div class="card"><div class="stat-label">Current score</div><div class="stat-value mono" style="color:${band.color};">${latest}</div><div class="stat-sub">${band.label}</div></div>
+      <div class="card"><div class="stat-label">12-month change</div><div class="stat-value mono" style="color:${delta>=0?'var(--teal)':'var(--red)'};">${delta>=0?"+":""}${delta}</div><div class="stat-sub">vs. ${c.scoreHistory[0].month}</div></div>
+      <div class="card"><div class="stat-label">Next update</div><div class="stat-value">28 Aug 2026</div><div class="stat-sub">Monthly bureau refresh</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px;">
+      <div class="stat-label" style="margin-bottom:10px;">Score trend</div>
+      <div style="position:relative; height:260px;">
+        <canvas id="scoreChart" role="img" aria-label="Line chart of ${c.name}'s credit score over 12 months, from ${first} to ${latest}"></canvas>
+      </div>
+    </div>
+
+    <h2 class="section-title">Contributing factors</h2>
+    <div class="grid grid-2">
+      ${c.scoreFactors.map(f=>`
+        <div class="card">
+          <div class="flex-between" style="margin-bottom:8px;">
+            <span style="font-size:13.5px; font-weight:600;">${f.label}</span>
+            <span class="mono" style="font-size:13px; color:var(--text-2);">${f.pct}/100</span>
+          </div>
+          <div style="height:6px; background:var(--border-soft); border-radius:4px; overflow:hidden;">
+            <div style="height:100%; width:${f.pct}%; background:${f.pct>=70?'var(--teal)':f.pct>=45?'var(--amber)':'var(--red)'};"></div>
+          </div>
+          <div class="muted" style="font-size:12.5px; margin-top:8px;">${f.detail}</div>
+        </div>
+      `).join("")}
+    </div>
+
+    <h2 class="section-title">Monthly history</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Month</th><th>Score</th><th>Band</th></tr></thead>
+      <tbody>
+        ${c.scoreHistory.slice().reverse().map(h=>{
+          const b = scoreBand(h.score);
+          return `<tr><td>${h.month}</td><td class="mono">${h.score}</td><td><span style="color:${b.color}; font-weight:600; font-size:12.5px;">${b.label}</span></td></tr>`;
+        }).join("")}
+      </tbody>
+    </table></div>
+  `;
+}
+
+let scoreChartInstance = null;
+function drawScoreChart(){
+  const c = selected();
+  const ctx = document.getElementById("scoreChart");
+  if(!ctx) return;
+  if(scoreChartInstance) scoreChartInstance.destroy();
+  scoreChartInstance = new Chart(ctx, {
+    type:"line",
+    data:{
+      labels: c.scoreHistory.map(h=>h.month),
+      datasets:[{
+        label:"Credit score",
+        data: c.scoreHistory.map(h=>h.score),
+        borderColor:"#1D5FA6",
+        backgroundColor:"rgba(29,95,166,0.08)",
+        pointBackgroundColor:"#1D5FA6",
+        pointRadius:3,
+        borderWidth:2,
+        fill:true,
+        tension:0.3
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label: ctx=>"Score: "+ctx.parsed.y}} },
+      scales:{
+        y:{ min:300, max:900, grid:{color:"#E7EBEF"}, ticks:{color:"#8A97A6", stepSize:100} },
+        x:{ grid:{display:false}, ticks:{color:"#8A97A6", maxRotation:45, autoSkip:false, font:{size:10}} }
+      }
+    }
+  });
+}
+
+/* ============================= CASHBACK & REWARDS ============================= */
+function renderCashback(){
+  const c = selected();
+  return `
+    <h1 class="page-title">Cashback & rewards</h1>
+    <p class="page-sub">Rewards balance and transaction ledger for ${c.name}.</p>
+
+    <div class="grid grid-4" style="margin-bottom:20px;">
+      <div class="card"><div class="stat-label">Available cashback</div><div class="stat-value">${inr(c.cashback.available)}</div></div>
+      <div class="card"><div class="stat-label">Earned this year</div><div class="stat-value">${inr(c.cashback.earnedYTD)}</div></div>
+      <div class="card"><div class="stat-label">Redeemed this year</div><div class="stat-value">${inr(c.cashback.redeemedYTD)}</div></div>
+      <div class="card"><div class="stat-label">Reward rate</div><div class="stat-value" style="font-size:15px; line-height:1.4;">${c.cashback.rate}</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="flex-between">
+        <div>
+          <div class="stat-label" style="margin-bottom:4px;">Redeem cashback</div>
+          <div class="muted" style="font-size:12.5px;">Redeem as a statement credit against the current balance.</div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="number" id="redeemAmount" placeholder="Amount" style="width:130px;" min="1" max="${c.cashback.available}"/>
+          <button class="btn btn-teal" onclick="redeemCashback('${c.id}')" ${c.cashback.available<=0?"disabled":""}>Redeem</button>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Redemption history</h2>
+    <div class="filter-row">
+      <button class="filter-chip ${state.rewardsRange==='30'?'active':''}" onclick="setRewardsRange('30')">Last 30 days</button>
+      <button class="filter-chip ${state.rewardsRange==='60'?'active':''}" onclick="setRewardsRange('60')">Last 60 days</button>
+      <button class="filter-chip ${state.rewardsRange==='statement'?'active':''}" onclick="setRewardsRange('statement')">Since last statement</button>
+    </div>
+    ${renderRedemptionWindow(c)}
+
+    <h2 class="section-title">Full transaction ledger</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Merchant</th><th>Category</th><th>Spend</th><th>Cashback</th></tr></thead>
+      <tbody>
+        ${c.cashback.transactions.map(t=>`<tr>
+          <td>${t.date}</td><td>${t.merchant}</td><td>${t.category}</td>
+          <td class="mono">${t.spend>0?inr(t.spend):"—"}</td>
+          <td class="mono" style="color:${t.cashback<0?'var(--red)':'var(--teal-dark)'}; font-weight:600;">${t.cashback<0?"− "+inr(Math.abs(t.cashback)):"+ "+inr(t.cashback)}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>
+  `;
+}
+function renderRedemptionWindow(c){
+  const redemptions = c.cashback.transactions.filter(t=>t.type==="Redeemed");
+  let windowLabel, filtered;
+  if(state.rewardsRange==="30"){
+    windowLabel = "in the last 30 days";
+    filtered = redemptions.filter(t=>daysAgo(t.date)<=30);
+  } else if(state.rewardsRange==="60"){
+    windowLabel = "in the last 60 days";
+    filtered = redemptions.filter(t=>daysAgo(t.date)<=60);
+  } else {
+    windowLabel = `since the last statement (${c.statementDate})`;
+    const statementDate = parseDate(c.statementDate);
+    filtered = redemptions.filter(t=>parseDate(t.date) >= statementDate);
+  }
+  const total = filtered.reduce((a,t)=>a+Math.abs(t.cashback),0);
+  return `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="flex-between">
+        <div class="stat-label" style="margin-bottom:0;">Redeemed ${windowLabel}</div>
+        <div class="mono" style="font-size:15px; font-weight:600; color:var(--teal-dark);">${inr(total)}</div>
+      </div>
+    </div>
+    ${filtered.length===0 ? `<div class="table-wrap" style="padding:20px; text-align:center;"><span class="muted">No redemptions recorded ${windowLabel}.</span></div>` : `
+    <div class="table-wrap" style="margin-bottom:20px;"><table>
+      <thead><tr><th>Date</th><th>Redemption type</th><th>Amount</th></tr></thead>
+      <tbody>
+        ${filtered.map(t=>`<tr>
+          <td>${t.date}</td><td>${t.merchant}</td>
+          <td class="mono" style="color:var(--red); font-weight:600;">− ${inr(Math.abs(t.cashback))}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`}
+  `;
+}
+function setRewardsRange(range){ state.rewardsRange = range; renderContent(); }
+function redeemCashback(id){
+  const c = getCustomer(id);
+  const input = document.getElementById("redeemAmount");
+  const amt = parseInt(input.value,10);
+  if(!amt || amt<=0){ showToast("Enter a valid amount"); return; }
+  if(amt>c.cashback.available){ showToast("Amount exceeds available cashback"); return; }
+  c.cashback.available -= amt;
+  c.cashback.redeemedYTD += amt;
+  c.cashback.transactions.unshift({date: today(), merchant:"Statement Credit", category:"Redemption", spend:0, cashback:-amt, type:"Redeemed"});
+  addAudit("Cashback redeemed", c, `${inr(amt)} redeemed as statement credit`);
+  showToast(inr(amt)+" redeemed as statement credit");
+  renderContent();
+}
+
+/* ============================= BILLING & STATEMENTS ============================= */
+function renderBilling(){
+  const c = selected();
+  return `
+    <h1 class="page-title">Billing & statements</h1>
+    <p class="page-sub">Current dues and statement history for ${c.name}.</p>
+
+    <div class="grid grid-4" style="margin-bottom:20px;">
+      <div class="card"><div class="stat-label">Statement date</div><div class="stat-value" style="font-size:16px;">${c.statementDate}</div></div>
+      <div class="card"><div class="stat-label">Payment due date</div><div class="stat-value" style="font-size:16px;">${c.dueDate}</div></div>
+      <div class="card"><div class="stat-label">Total due</div><div class="stat-value">${inr(c.totalDue)}</div></div>
+      <div class="card"><div class="stat-label">Minimum due</div><div class="stat-value">${inr(c.minDue)}</div></div>
+    </div>
+
+    <h2 class="section-title">Statement history</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Statement month</th><th>Total due</th><th>Min due</th><th>Paid amount</th><th>Paid date</th><th>Status</th></tr></thead>
+      <tbody>
+        ${c.statements.map(s=>`<tr>
+          <td>${s.month}</td><td class="mono">${inr(s.totalDue)}</td><td class="mono">${inr(s.minDue)}</td>
+          <td class="mono">${s.paidAmount>0?inr(s.paidAmount):"—"}</td><td>${s.paidDate}</td>
+          <td><span class="pill ${statementPillClass(s.status)}"><span class="pill-dot"></span>${s.status}</span></td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>
+  `;
+}
+
+/* ============================= AUDIT LOG ============================= */
+function renderAuditLog(){
+  const agentNames = ["All", ...AGENTS.map(a=>a.name)];
+  const actionTypes = ["All", ...Array.from(new Set(state.auditLog.map(l=>l.action)))];
+  let list = state.auditLog;
+  if(state.auditAgentFilter!=="All") list = list.filter(l=>l.agent===state.auditAgentFilter);
+  if(state.auditActionFilter!=="All") list = list.filter(l=>l.action===state.auditActionFilter);
+
+  return `
+    <h1 class="page-title">Audit log</h1>
+    <p class="page-sub">Every action taken across all accounts, in chronological order.</p>
+
+    <div class="grid grid-2" style="margin-bottom:16px;">
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Filter by agent</label>
+        <select onchange="setAuditFilter('agent', this.value)">
+          ${agentNames.map(n=>`<option value="${n}" ${state.auditAgentFilter===n?"selected":""}>${n}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Filter by action type</label>
+        <select onchange="setAuditFilter('action', this.value)">
+          ${actionTypes.map(n=>`<option value="${n}" ${state.auditActionFilter===n?"selected":""}>${n}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+
+    ${list.length===0 ? `<div class="table-wrap" style="padding:24px; text-align:center;"><span class="muted">No activity recorded yet — actions taken in the console will appear here.</span></div>` : `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Timestamp</th><th>Agent</th><th>Customer</th><th>Action</th><th>Details</th></tr></thead>
+      <tbody>
+        ${list.map(l=>`<tr>
+          <td class="mono" style="white-space:nowrap; font-size:12px;">${l.timestamp}</td>
+          <td>${l.agent}</td>
+          <td>${l.customerName}${l.customerId?`<br/><span class="muted" style="font-size:11.5px;">${l.customerId}</span>`:""}</td>
+          <td>${l.action}</td>
+          <td class="muted" style="font-size:12.5px;">${l.details}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`}
+  `;
+}
+function setAuditFilter(kind, value){
+  if(kind==="agent") state.auditAgentFilter = value; else state.auditActionFilter = value;
+  renderContent();
+}
+
+/* ============================= MODALS ============================= */
+function openModal(kind){
+  const c = selected();
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "modalOverlay";
+  if(kind==="replace"){
+    overlay.innerHTML = `<div class="modal">
+      <h3>Request card replacement</h3>
+      <p class="modal-sub">A new physical card will be issued for ${c.name}'s ${c.cardType}.</p>
+      <div class="field"><label class="field-label">Reason</label>
+        <select id="replaceReason"><option>Lost card</option><option>Stolen card</option><option>Damaged card</option><option>Expiring soon</option></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReplacement('${c.id}')">Submit request</button>
+      </div>
+    </div>`;
+  } else {
+    overlay.innerHTML = `<div class="modal">
+      <h3>Request limit increase</h3>
+      <p class="modal-sub">Submit a request for underwriting review. Current limit: ${inr(c.creditLimit)}.</p>
+      <div class="field"><label class="field-label">Requested new limit</label>
+        <input type="number" id="limitAmount" placeholder="e.g. ${c.creditLimit + 100000}"/>
+      </div>
+      <div class="field"><label class="field-label">Reason</label>
+        <textarea id="limitReason" rows="2" placeholder="Reason for the request"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitLimitIncrease('${c.id}')">Submit request</button>
+      </div>
+    </div>`;
+  }
+  document.body.appendChild(overlay);
+}
+function closeModal(){
+  const el = document.getElementById("modalOverlay");
+  if(el) el.remove();
+}
+function submitReplacement(id){
+  const reason = document.getElementById("replaceReason").value;
+  const c = getCustomer(id);
+  c.tickets.unshift({id: nextTicketId(), type:"Card Replacement", subject:"Replacement requested — "+reason, description:"Agent-initiated replacement request. New card will be dispatched to the registered address.", status:"Open", created: today(), updated: today()});
+  addAudit("Card replacement requested", c, reason);
+  closeModal();
+  showToast("Replacement request submitted");
+  renderContent();
+}
+function submitLimitIncrease(id){
+  const amount = document.getElementById("limitAmount").value;
+  const reason = document.getElementById("limitReason").value.trim();
+  const c = getCustomer(id);
+  c.tickets.unshift({id: nextTicketId(), type:"Limit Increase", subject:"Requested new limit of "+(amount?inr(amount):"—"), description: reason || "No additional reason provided.", status:"Open", created: today(), updated: today()});
+  addAudit("Limit increase requested", c, `New limit requested: ${amount?inr(amount):"—"}. Reason: ${reason||"—"}`);
+  closeModal();
+  showToast("Limit increase request submitted");
+  renderContent();
+}
+
+/* ============================= INIT ============================= */
+(async function init(){
+  await hydrateState();
+  render();
+})();
+</script>
+</body>
+</html>
